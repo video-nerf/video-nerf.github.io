@@ -178,6 +178,7 @@ class VideoHandler {
 				v.addEventListener("pause", this);
 				v.addEventListener("seeking", this);
 				v.addEventListener("seeked", this);
+				v.addEventListener("playing", this);
 			} else {
 				b.className = "";
 				v.style.display = "none";
@@ -185,6 +186,7 @@ class VideoHandler {
 				v.removeEventListener("pause", this);
 				v.removeEventListener("seeking", this);
 				v.removeEventListener("seeked", this);
+				v.removeEventListener("playing", this);
 			}
 		}
 	};
@@ -195,6 +197,7 @@ class VideoHandler {
 			case "pause": this.pause_video(e); break;
 			case "seeking": this.sync_video(e); break;
 			case "seeked": this.sync_video(e); break;
+			case "playing": this.sync_video(e); break;
 		}
 	}
 
