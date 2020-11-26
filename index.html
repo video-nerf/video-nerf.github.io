@@ -1,5 +1,372 @@
+<!doctype html>
 <html>
+<head>
+<title>Space-time Neural Irradiance Fields for Free-Viewpoint Video</title>
+<style>
+
+html {
+  background-color: #eee;
+  margin: 0;
+}
+body {
+  font-family: helvetica, arial, sans-serif;
+  font-size: 11pt;
+  font-weight: 300;
+  line-height: 1.2em;
+  text-align: left;
+  background-color: white;
+  color: black;
+  width: 840px;
+  margin: 0 auto;
+  padding: 12px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+}
+h1 {
+  /* text-align: center; */
+  text-align: left;
+}
+h1 {
+  font-size: 1.5em;
+  /* margin-top: 1.5em; */
+  /* margin-bottom: 1em; */
+}
+h2 {
+  font-size: 1.15em;
+  margin-top: 1.5em;
+  /* margin-bottom: 0; */
+}
+p, ul {
+  /* margin-top: 0.6em;
+  margin-bottom: 1.1em; */
+}
+ul {
+  padding-left: 2em;
+}
+a {
+  text-decoration: underline; color: black;
+}
+a:hover {
+  text-decoration: underline; color: gray;
+}
+/* wrap long lines */
+pre {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+  text-align: left;
+}
+pre {
+  border-left: 5px solid #eee;
+  padding-left: 5;
+}
+@media only screen and (max-device-width: 480px) {
+  html { background-color: white; }
+  body { width: 97%; box-shadow: none; }
+  body {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust:    100%;
+    -ms-text-size-adjust:     100%;
+  }
+  body { font-size: 1.25em; font-size: 2.1vw; line-height: 1.6em; line-height: 2.7vw; }
+}
+@media print {
+  html { background-color: white; }
+  body { width: 97%; box-shadow: none; }
+}
+
+button {
+	padding: 0.5em 0.75em;
+	margin: 0.4em 0.4em;
+	min-width: 12ch;
+	background-color: #ddd;
+	color: #333;
+	border-radius: 5px;
+  border: none;
+  cursor: pointer;
+
+  @media screen and (-ms-high-contrast: active) {
+    border: 2px solid currentcolor;
+  }
+}
+
+button.on {
+	background-color: #333;
+	color: #bbb;
+}
+
+.center {
+	text-align: center;
+}
+.flex {
+	display: flex;
+}
+.desc {
+	margin: 1.5em 0.4em;
+}
+.wider_buttons button {
+	display: block;
+	min-width: 20ch;
+}
+button {
+	display: block;
+}
+video {
+	display: none;
+	width: 540px;
+	height: 540px;
+	margin: 0.4em;
+}
+video.on {
+	display: block;
+}
+
+.shadow {
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+</style>
+<script>
+class VideoHandler {
+	constructor(n_datasets, n_videos, databtn_id, vidbtn_id, vidtag_id) {
+		this.n_datasets = n_datasets;
+		this.n_videos = n_videos;
+
+		this.databtn_id = databtn_id;
+		this.vidbtn_id = vidbtn_id;
+		this.vidtag_id = vidtag_id;
+	}
+
+	get paused() {
+		return document.getElementById(this.vidtag_id + "0").paused;
+	}
+
+	sync_video(e) {
+		if (e === undefined) {
+			return;
+		}
+		for (let i = 0; i < this.n_videos; i++) {
+			let v = document.getElementById(this.vidtag_id + i.toString());
+			if (v != e.currentTarget) {
+				v.currentTime = e.currentTarget.currentTime;
+			}
+		}
+	};
+
+	play_video(e) {
+		this.sync_video(e);
+		for (let i = 0; i < this.n_videos; i++) {
+			document.getElementById(this.vidtag_id + i.toString()).play();
+		}
+	};
+
+	pause_video(e) {
+		for (let i = 0; i < this.n_videos; i++) {
+			document.getElementById(this.vidtag_id + i.toString()).pause();
+		}
+		this.sync_video(e);
+	};
+
+	select_video(j) {
+		for (let i = 0; i < this.n_videos; i++) {
+			let v = document.getElementById(this.vidtag_id + i.toString());
+			let b = document.getElementById(this.vidbtn_id + i.toString());
+			if (i == j) {
+				b.className = "on";
+				v.style.display = "block";
+				v.addEventListener("play", this);
+				v.addEventListener("pause", this);
+				v.addEventListener("seeking", this);
+				v.addEventListener("seeked", this);
+			} else {
+				b.className = "";
+				v.style.display = "none";
+				v.removeEventListener("play", this);
+				v.removeEventListener("pause", this);
+				v.removeEventListener("seeking", this);
+				v.removeEventListener("seeked", this);
+			}
+		}
+	};
+
+	handleEvent(e) {
+		switch (e.type) {
+			case "play": this.play_video(e); break;
+			case "pause": this.pause_video(e); break;
+			case "seeking": this.sync_video(e); break;
+			case "seeked": this.sync_video(e); break;
+		}
+	}
+
+	select_dataset(j) {
+		let autoplay = !this.paused;
+		let dataset_name = document.getElementById(this.databtn_id + j.toString()).value;
+		for (let i = 0; i < this.n_datasets; i++) {
+			document.getElementById(this.databtn_id + i.toString()).className = (i == j ? "on" : "");
+		}
+		for (let i = 0; i < this.n_videos; i++) {
+			let video_name = document.getElementById(this.vidbtn_id + i.toString()).value;
+			let v = document.getElementById(this.vidtag_id + i.toString());
+			v.src = "videos/" + dataset_name + "_" + video_name + ".mp4";
+		}
+		if (autoplay) {
+			this.play_video();
+		}
+	};
+ 
+ 	register() {
+		for (let i = 0; i < this.n_datasets; i++) {
+			document.getElementById(this.databtn_id + i.toString()).addEventListener("click", function() { this.select_dataset(i); }.bind(this, i));
+		}
+
+		for (let i = 0; i < this.n_videos; i++) {
+			document.getElementById(this.vidbtn_id + i.toString()).addEventListener("click", function() { this.select_video(i); }.bind(this, i));
+		}
+
+		for (let i = 0; i < this.n_videos; i++) {
+			document.getElementById(this.vidtag_id + i.toString()).muted = true;
+		}
+
+		this.select_video(0);
+	}
+}
+
+window.onload = function() {
+	comparisons_handler = new VideoHandler(10, 5, "cmp_data", "cmp_btn", "cmp_vid");
+	comparisons_handler.register();
+	comparisons_handler.play_video();
+	ablation_handler = new VideoHandler(2, 5, "abl_data", "abl_btn", "abl_vid");
+	ablation_handler.register();
+	ablation_handler.play_video();
+};
+</script>
+</head>
 <body>
-<h1>Hello, World!</h1>
+<h1 class="center">Space-time Neural Irradiance Fields for Free-Viewpoint Video</h1>
+<div class="flex" style="justify-content: space-evenly; text-align: center; font-weight: 400;">
+<div style="margin-bottom: 10px;">
+<p><a href="https://www.cs.cornell.edu/~wenqixian/">Wenqi Xian</a></p>
+<p>Cornell Tech</p>
+</div>
+<div>
+<p><a href="https://filebox.ece.vt.edu/~jbhuang/">Jia-Bin Huang</a></p>
+<p>Virginia Tech</p>
+</div>
+<div>
+<p><a href="https://johanneskopf.de/">Johannes Kopf</a></p>
+<p>Facebook</p>
+</div>
+<div>
+<p><a href="https://changilkim.com/">Changil Kim</a></p>
+<p>Facebook</p>
+</div>
+</div>
+<center>
+<iframe width="720" height="405" src="https://www.youtube.com/embed/2tN8ghNu2sI" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</center>
+<h2>Abstract</h2>
+<p style="text-align: justify;">We present a method that learns a spatiotemporal neural irradiance field for dynamic scenes from a single video. Our learned representation enables free-viewpoint rendering of the input video. Our method builds upon recent advances in implicit representations. Learning a spatiotemporal irradiance field from a single video poses significant challenges because the video contains only one observation of the scene at any point in time. The 3D geometry of a scene can be legitimately represented in numerous ways since varying geometry (motion) can be explained with varying appearance and vice versa. We address this ambiguity by constraining the time-varying geometry of our dynamic scene representation using the scene depth estimated from video depth estimation methods, aggregating contents from individual frames into a single global representation. We provide an extensive quantitative evaluation and demonstrate compelling free-viewpoint rendering results.</p>
+<div>
+<div class="flex" style="justify-content: space-evenly; text-align: center;">
+<a href="https://arxiv.org/abs/2011.12950"><p><img src="images/paper_thumbnail.png" style="height: 120px;" class="shadow"/></p><p>Paper (arXiv)</p></a>
+<a href="#"><p style="height: 128px;"><img src="images/GitHub-Mark-120px-plus.png" style="position: relative; top: 20px; height: 80px;"/></p><p>Code (Coming Soon)</p></a>
+</div>
+<h2 id="comparisons">Results</h2>
+<div class="flex">
+<div>
+<div class="flex">
+<div>
+<button id="cmp_data2" value="VID_20190928_123018" class="on">Boy 1</button>
+<button id="cmp_data1" value="ayush_wave">Person 1</button>
+<button id="cmp_data4" value="VID_20190928_122603">Boy 2</button>
+<button id="cmp_data9" value="VID_20190920_184235">Person 2</button>
+<button id="cmp_data0" value="VID_20190920_185325">Dog</button>
+<button id="cmp_data3" value="VID_20190922_190151">Boy 3</button>
+<button id="cmp_data5" value="VID_20190919_202641">Cat 1</button>
+<button id="cmp_data6" value="VID_20190929_215728">Cat 2</button>
+<button id="cmp_data7" value="VID_20190928_151113">Person 3</button>
+<button id="cmp_data8" value="VID_20190928_151303">Person 4</button>
+</div>
+<div class="wider_buttons">
+<button id="cmp_btn1" value="input">Input Video</button>
+<button id="cmp_btn0" value="ours" class="on"><b>Our Result</b></button>
+<button id="cmp_btn2" value="mesh">Mesh</button>
+<button id="cmp_btn3" value="inpainted">Inpainted Mesh</button>
+<button id="cmp_btn4" value="nerf-t">NeRF + T</button>
+</div>
+</div>
+<div class="desc">
+<p><b>Input Videos</b> are retimed to match the speed of the result videos. Some are slowed down to better reveal details.</p>
+<p><b>Meshes</b> results are rendered using textured meshes that are each constructed from a single input depth map, respectively.</p>
+<p>For <b>Inpainted Meshes</b>, the holes revealed by disocclusions in the mesh renderings are inpainted using a state-of-the-art <a hef="http://chengao.vision/FGVC/">video inpainting method</a>. Every 4th frame is used for video inpainting due to memory issues and the resulting videos are played back 4 times slower to compensate for the missing frames.</p>
+<p><b>NeRF + T</b> refers to the original <a href="https://www.matthewtancik.com/nerf">NeRF</a> with an additional time dimension added, but trained without our losses. Viewing directions are not used to train these models.</p>
+</div>
+</div>
+<div>
+<video id="cmp_vid0" controls loop class="on">
+<source src="videos/VID_20190928_123018_ours.mp4" type="video/mp4"/>
+</video>
+<video id="cmp_vid1" controls loop>
+<source src="videos/VID_20190928_123018_input.mp4" type="video/mp4"/>
+</video>
+<video id="cmp_vid2" controls loop>
+<source src="videos/VID_20190928_123018_mesh.mp4" type="video/mp4"/>
+</video>
+<video id="cmp_vid3" controls loop>
+<source src="videos/VID_20190928_123018_inpainted.mp4" type="video/mp4"/>
+</video>
+<video id="cmp_vid4" controls loop>
+<source src="videos/VID_20190928_123018_nerf-t.mp4" type="video/mp4"/>
+</video>
+</div>
+</div>
+<h2 id="ablations">Ablation Studies</h2>
+<div class="flex">
+<div>
+<div class="flex">
+<div>
+<button id="abl_data0" value="VID_20190928_123018" class="on">Boy 1</button>
+<button id="abl_data1" value="VID_20190919_202641">Cat 1</button>
+</div>
+<div class="wider_buttons">
+<button id="abl_btn1" value="nerf-t">NeRF + T</button>
+<button id="abl_btn2" value="1">Ld</button>
+<button id="abl_btn3" value="2">Ld + Le</button>
+<button id="abl_btn4" value="3">Ld + Ls</button>
+<button id="abl_btn0" value="ours" class="on"><b>Ld + Le + Ls (Ours)</b></button>
+</div>
+</div>
+<div class="desc">
+<p><b>NeRF + T</b>: The baseline <a href="https://www.matthewtancik.com/nerf">NeRF</a> model with an additional time dimension added, but trained with only the color reconstruction loss. Viewing directions are not used.</p>
+<p><b>Ld</b>: Trained with our depth reconstruction loss (Equation 5).</p>
+<p><b>Le</b>: Trained with our empty-space loss (Equation 7).</p>
+<p><b>Ls</b>: Trained with our static scene loss (Equation 8).</p>
+</div>
+</div>
+<div>
+<video id="abl_vid0" controls loop class="on">
+<source src="videos/VID_20190928_123018_ours.mp4" type="video/mp4"/>
+</video>
+<video id="abl_vid1" controls loop>
+<source src="videos/VID_20190928_123018_nerf-t.mp4" type="video/mp4"/>
+</video>
+<video id="abl_vid2" controls loop>
+<source src="videos/VID_20190928_123018_1.mp4" type="video/mp4"/>
+</video>
+<video id="abl_vid3" controls loop>
+<source src="videos/VID_20190928_123018_2.mp4" type="video/mp4"/>
+</video>
+<video id="abl_vid4" controls loop>
+<source src="videos/VID_20190928_123018_3.mp4" type="video/mp4"/>
+</video>
+</div>
+</div>
+<h2>BibTeX</h2>
+<pre><code>@article{xian2020space,
+  author    = {Wenqi Xian and Jia-Bin Huang and Johannes Kopf and Changil Kim},
+  title     = {Space-time Neural Irradiance Fields for Free-Viewpoint Video},
+  year      = {2020},
+  journal   = {arXiv preprint arXiv:2011.12950},
+}</code></pre>
 </body>
 </html>
