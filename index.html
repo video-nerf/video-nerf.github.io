@@ -76,12 +76,12 @@ pre {
 }
 
 button {
-	padding: 0.5em 0.75em;
-	margin: 0.4em 0.4em;
-	min-width: 12ch;
-	background-color: #ddd;
-	color: #333;
-	border-radius: 5px;
+  padding: 0.5em 0.75em;
+  margin: 0.4em 0.4em;
+  min-width: 12ch;
+  background-color: #ddd;
+  color: #333;
+  border-radius: 5px;
   border: none;
   cursor: pointer;
 
@@ -91,156 +91,156 @@ button {
 }
 
 button.on {
-	background-color: #333;
-	color: #bbb;
+  background-color: #333;
+  color: #bbb;
 }
 
 .center {
-	text-align: center;
+  text-align: center;
 }
 .flex {
-	display: flex;
+  display: flex;
 }
 .desc {
-	margin: 1.5em 0.4em;
+  margin: 1.5em 0.4em;
 }
 .wider_buttons button {
-	display: block;
-	min-width: 20ch;
+  display: block;
+  min-width: 20ch;
 }
 button {
-	display: block;
+  display: block;
 }
 video {
-	display: none;
-	width: 540px;
-	height: 540px;
-	margin: 0.4em;
+  display: none;
+  width: 540px;
+  height: 540px;
+  margin: 0.4em;
 }
 video.on {
-	display: block;
+  display: block;
 }
 
 .shadow {
-	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 </style>
 <script>
 class VideoHandler {
-	constructor(n_datasets, n_videos, databtn_id, vidbtn_id, vidtag_id) {
-		this.n_datasets = n_datasets;
-		this.n_videos = n_videos;
+  constructor(n_datasets, n_videos, databtn_id, vidbtn_id, vidtag_id) {
+    this.n_datasets = n_datasets;
+    this.n_videos = n_videos;
 
-		this.databtn_id = databtn_id;
-		this.vidbtn_id = vidbtn_id;
-		this.vidtag_id = vidtag_id;
-	}
+    this.databtn_id = databtn_id;
+    this.vidbtn_id = vidbtn_id;
+    this.vidtag_id = vidtag_id;
+  }
 
-	get paused() {
-		return document.getElementById(this.vidtag_id + "0").paused;
-	}
+  get paused() {
+    return document.getElementById(this.vidtag_id + "0").paused;
+  }
 
-	sync_video(e) {
-		if (e === undefined) {
-			return;
-		}
-		for (let i = 0; i < this.n_videos; i++) {
-			let v = document.getElementById(this.vidtag_id + i.toString());
-			if (v != e.currentTarget) {
-				v.currentTime = e.currentTarget.currentTime;
-			}
-		}
-	};
+  sync_video(e) {
+    if (e === undefined) {
+      return;
+    }
+    for (let i = 0; i < this.n_videos; i++) {
+      let v = document.getElementById(this.vidtag_id + i.toString());
+      if (v != e.currentTarget) {
+        v.currentTime = e.currentTarget.currentTime;
+      }
+    }
+  };
 
-	play_video(e) {
-		this.sync_video(e);
-		for (let i = 0; i < this.n_videos; i++) {
-			document.getElementById(this.vidtag_id + i.toString()).play();
-		}
-	};
+  play_video(e) {
+    this.sync_video(e);
+    for (let i = 0; i < this.n_videos; i++) {
+      document.getElementById(this.vidtag_id + i.toString()).play();
+    }
+  };
 
-	pause_video(e) {
-		for (let i = 0; i < this.n_videos; i++) {
-			document.getElementById(this.vidtag_id + i.toString()).pause();
-		}
-		this.sync_video(e);
-	};
+  pause_video(e) {
+    for (let i = 0; i < this.n_videos; i++) {
+      document.getElementById(this.vidtag_id + i.toString()).pause();
+    }
+    this.sync_video(e);
+  };
 
-	select_video(j) {
-		for (let i = 0; i < this.n_videos; i++) {
-			let v = document.getElementById(this.vidtag_id + i.toString());
-			let b = document.getElementById(this.vidbtn_id + i.toString());
-			if (i == j) {
-				b.className = "on";
-				v.style.display = "block";
-				v.addEventListener("play", this);
-				v.addEventListener("pause", this);
-				v.addEventListener("seeking", this);
-				v.addEventListener("seeked", this);
-				v.addEventListener("playing", this);
-			} else {
-				b.className = "";
-				v.style.display = "none";
-				v.removeEventListener("play", this);
-				v.removeEventListener("pause", this);
-				v.removeEventListener("seeking", this);
-				v.removeEventListener("seeked", this);
-				v.removeEventListener("playing", this);
-			}
-		}
-	};
+  select_video(j) {
+    for (let i = 0; i < this.n_videos; i++) {
+      let v = document.getElementById(this.vidtag_id + i.toString());
+      let b = document.getElementById(this.vidbtn_id + i.toString());
+      if (i == j) {
+        b.className = "on";
+        v.style.display = "block";
+        v.addEventListener("play", this);
+        v.addEventListener("pause", this);
+        v.addEventListener("seeking", this);
+        v.addEventListener("seeked", this);
+        v.addEventListener("playing", this);
+      } else {
+        b.className = "";
+        v.style.display = "none";
+        v.removeEventListener("play", this);
+        v.removeEventListener("pause", this);
+        v.removeEventListener("seeking", this);
+        v.removeEventListener("seeked", this);
+        v.removeEventListener("playing", this);
+      }
+    }
+  };
 
-	handleEvent(e) {
-		switch (e.type) {
-			case "play": this.play_video(e); break;
-			case "pause": this.pause_video(e); break;
-			case "seeking": this.sync_video(e); break;
-			case "seeked": this.sync_video(e); break;
-			case "playing": this.sync_video(e); break;
-		}
-	}
+  handleEvent(e) {
+    switch (e.type) {
+      case "play": this.play_video(e); break;
+      case "pause": this.pause_video(e); break;
+      case "seeking": this.sync_video(e); break;
+      case "seeked": this.sync_video(e); break;
+      case "playing": this.sync_video(e); break;
+    }
+  }
 
-	select_dataset(j) {
-		let autoplay = !this.paused;
-		let dataset_name = document.getElementById(this.databtn_id + j.toString()).value;
-		for (let i = 0; i < this.n_datasets; i++) {
-			document.getElementById(this.databtn_id + i.toString()).className = (i == j ? "on" : "");
-		}
-		for (let i = 0; i < this.n_videos; i++) {
-			let video_name = document.getElementById(this.vidbtn_id + i.toString()).value;
-			let v = document.getElementById(this.vidtag_id + i.toString());
-			v.src = "videos/" + dataset_name + "_" + video_name + ".mp4";
-		}
-		if (autoplay) {
-			this.play_video();
-		}
-	};
+  select_dataset(j) {
+    let autoplay = !this.paused;
+    let dataset_name = document.getElementById(this.databtn_id + j.toString()).value;
+    for (let i = 0; i < this.n_datasets; i++) {
+      document.getElementById(this.databtn_id + i.toString()).className = (i == j ? "on" : "");
+    }
+    for (let i = 0; i < this.n_videos; i++) {
+      let video_name = document.getElementById(this.vidbtn_id + i.toString()).value;
+      let v = document.getElementById(this.vidtag_id + i.toString());
+      v.src = "videos/" + dataset_name + "_" + video_name + ".mp4";
+    }
+    if (autoplay) {
+      this.play_video();
+    }
+  };
  
- 	register() {
-		for (let i = 0; i < this.n_datasets; i++) {
-			document.getElementById(this.databtn_id + i.toString()).addEventListener("click", function() { this.select_dataset(i); }.bind(this, i));
-		}
+   register() {
+    for (let i = 0; i < this.n_datasets; i++) {
+      document.getElementById(this.databtn_id + i.toString()).addEventListener("click", function() { this.select_dataset(i); }.bind(this, i));
+    }
 
-		for (let i = 0; i < this.n_videos; i++) {
-			document.getElementById(this.vidbtn_id + i.toString()).addEventListener("click", function() { this.select_video(i); }.bind(this, i));
-		}
+    for (let i = 0; i < this.n_videos; i++) {
+      document.getElementById(this.vidbtn_id + i.toString()).addEventListener("click", function() { this.select_video(i); }.bind(this, i));
+    }
 
-		for (let i = 0; i < this.n_videos; i++) {
-			document.getElementById(this.vidtag_id + i.toString()).muted = true;
-		}
+    for (let i = 0; i < this.n_videos; i++) {
+      document.getElementById(this.vidtag_id + i.toString()).muted = true;
+    }
 
-		this.select_video(0);
-	}
+    this.select_video(0);
+  }
 }
 
 window.onload = function() {
-	comparisons_handler = new VideoHandler(10, 5, "cmp_data", "cmp_btn", "cmp_vid");
-	comparisons_handler.register();
-	comparisons_handler.play_video();
-	ablation_handler = new VideoHandler(2, 5, "abl_data", "abl_btn", "abl_vid");
-	ablation_handler.register();
-	ablation_handler.play_video();
+  comparisons_handler = new VideoHandler(10, 5, "cmp_data", "cmp_btn", "cmp_vid");
+  comparisons_handler.register();
+  comparisons_handler.play_video();
+  ablation_handler = new VideoHandler(2, 5, "abl_data", "abl_btn", "abl_vid");
+  ablation_handler.register();
+  ablation_handler.play_video();
 };
 </script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-SQ23B7H1TW"></script>
@@ -377,7 +377,7 @@ window.onload = function() {
 <pre><code>@inproceedings{xian2021space,
   author    = {Wenqi Xian and Jia-Bin Huang and Johannes Kopf and Changil Kim},
   title     = {Space-time Neural Irradiance Fields for Free-Viewpoint Video},
-	booktitle = {Proceedings of IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  booktitle = {Proceedings of IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
   year      = {2021},
 }</code></pre>
 </body>
